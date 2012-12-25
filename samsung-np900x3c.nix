@@ -3,42 +3,19 @@
 
 { config, pkgs, ... }:
 
-let 
-  haskell_packages_base = self : [
-    self.haskellPlatform
-    self.cabalInstall
-  ];
-
-  haskell_packages = self : [
-    self.haskellPlatform
-    self.cabalInstall
-    self.happstackServer
-    self.happstackHamlet
-    self.happstackUtil
-    self.HSH
-    self.cmdlib
-    self.ghcMod
-    self.hoogle
-    self.haskdogs
-    self.hasktags
-    self.regexPcre
-    self.happy
-    self.HaXml
-  ];
-
-in {
+{
   require = [
-      # Include the results of the hardware scan.
       /etc/nixos/hardware-configuration.nix
+      ./devenv.nix
+      ./subpixel.nix
+      ./haskell_7_6.nix
     ];
 
   hardware.firmware = [ "/root/firmware" ];
 
-  boot.initrd.kernelModules = [
-      # Specify all kernel modules that are necessary for mounting the root
-      # filesystem.
-      # "xfs" "ata_piix"
-    ];
+  # Specify all kernel modules that are necessary for mounting the root
+  # filesystem.
+  boot.initrd.kernelModules = [ ];
 
   boot.blacklistedKernelModules = [
     "fbcon"
@@ -57,7 +34,7 @@ in {
   time.timeZone = "Etc/GMT-4";
 
   networking = {
-    hostName = "greyblade"; # Define your hostname.
+    hostName = "greyblade";
 
     interfaceMonitor.enable = false;
     wireless.enable = false;
@@ -65,9 +42,6 @@ in {
     wicd.enable = true;
   };
 
-  # Add filesystem entries for each partition that you want to see
-  # mounted at boot time.  This should include at least the root
-  # filesystem.
   fileSystems = [
     { mountPoint = "/";
       device = "/dev/disk/by-label/ROOT";
@@ -80,7 +54,6 @@ in {
     }
   ];
 
-  # List swap partitions activated at boot time.
   swapDevices = [
     { device = "/dev/disk/by-label/SWAP"; }
   ];
@@ -88,13 +61,6 @@ in {
   powerManagement = {
     enable = true;
   };
-
-  # Select internationalisation properties.
-  # i18n = {
-  #   consoleFont = "lat9w-16";
-  #   consoleKeyMap = "us";
-  #   defaultLocale = "en_US.UTF-8";
-  # };
 
   security = {
     sudo.configFile =
@@ -118,8 +84,6 @@ in {
     servers = [ "server.local" "0.pool.ntp.org" "1.pool.ntp.org" "2.pool.ntp.org" ];
   };
 
-  # List services that you want to enable:
-  # Enable the OpenSSH daemon.
   services.openssh = {
     enable = true;
   };
@@ -140,10 +104,8 @@ in {
     xkbOptions = "eurosign:e, grp:alt_space_toggle, ctrl:swapcaps, grp_led:caps, ctrl:nocaps";
 
     desktopManager.xfce.enable = true;
-    #desktopManager.kde4.enable = true;
 
     displayManager = {
-      #kdm.enable = true;
       slim = {
         enable = true;
         defaultUser = "ierton";
@@ -270,9 +232,7 @@ in {
     ghostscript
     djview4
     tightvnc
-    #thunderbird
     wine
-    # xfce.xarchiver
     xfce.xfce4_cpufreq_plugin
     xfce.xfce4_systemload_plugin
     xfce.gigolo
@@ -282,83 +242,22 @@ in {
     gqview
     libreoffice
     gnome_mplayer
-    #linuxPackages.virtualbox
-    #linuxPackages.virtualboxGuestAdditions
-    #impressive
-    #pianobooster
     pidgin
-    #gnome2.zenity
     wireshark
-    #ghdl
     gimp_2_8
-    #tremulous
-    #opencv
     skype
+    dosbox
 
-    hask_761
-
+    # Custom stuff
+    haskell_7_6
     devenv
     freetype_subpixel
-  ];
 
+  ];
 
   nixpkgs.config = {
     chrome.jre = true;
     firefox.jre = true;
-
-    packageOverrides = pkgs: {
-      freetype_subpixel = pkgs.freetype.override {
-        useEncumberedCode = true;
-      };
-
-      hask_761 = (pkgs.haskellPackages_ghc761.ghcWithPackages haskell_packages_base);
-      
-      devenv = pkgs.myEnvFun {
-        name = "dev";
-
-        buildInputs = with pkgs; [
-          autoconf
-          automake
-          gettext
-          intltool
-          libtool
-          pkgconfig
-          perl
-          curl
-          sqlite
-          cmake
-          qt4
-          python
-          glew
-          mesa
-          freetype
-          fontconfig
-          ncurses
-          curl
-          zlib
-          opencv
-          xlibs.xproto
-          xlibs.libX11
-          xlibs.libXt
-          xlibs.libXft
-          xlibs.libXext
-          xlibs.libSM
-          xlibs.libICE
-          xlibs.xextproto
-          xlibs.libXrender
-          xlibs.renderproto
-          xlibs.libxkbfile
-          xlibs.kbproto
-          xlibs.libXrandr
-          xlibs.randrproto
-        ];
-
-        extraCmds = ''
-          unset http_proxy
-          unset https_proxy
-        '';
-      };
-    };
   };
-
 }
+
