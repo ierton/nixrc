@@ -1,7 +1,4 @@
-## Edit this configuration file which defines what would be installed on the
-# system.  To Help while choosing option value, you can watch at the manual
-# page of configuration.nix or at the last chapter of the manual available
-# on the virtual console 8 (Alt+F8).
+## FIXME: this file is quite old and not supported
 
 {config, pkgs, ...}:
 
