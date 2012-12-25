@@ -1,0 +1,108 @@
+#!/bin/sh
+
+export SM_NIX_ROOT=/home/ierton/proj/nix
+export NIX_PATH="nixpkgs=$SM_NIX_ROOT/nixpkgs:nixos=$SM_NIX_ROOT/nixos:nixos-config=$SM_NIX_ROOT/nixos-config:services=/etc/nixos/services"
+
+cdt() { cd $HOME/tmp; }
+cdn() { cd $SM_NIX_ROOT; }
+cdp() { cd $SM_NIX_ROOT/nixpkgs; }
+cdo() { cd $SM_NIX_ROOT/nixos; }
+
+vimc() { (cdn && vim nixos-config ; ); }
+vimp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
+vimo() { (cdo && vim .; ); }
+
+asroot() {
+  case `whoami` in
+    root)
+      echo "" ;;
+    *)
+      echo "sudo -H " ;;
+  esac
+}
+
+tofull() {
+  case $1 in
+    /*) echo "$1" ;;
+    *) echo "`pwd`/$1" ;;
+  esac
+}
+
+tfetch() {
+  ( cdp && git fetch origin ; )
+  ( cdo && git fetch origin ; )
+}
+
+ttest() { # Runs nixos-rebuil dry-run
+  nixos-rebuild -I $SM_NIX_ROOT "$@" dry-run
+}
+
+tswitch() { # Runs nixos-rebuild switch
+  `asroot` nixos-rebuild -I $SM_NIX_ROOT switch
+}
+
+trev() { # Pulls revision from nixos channel
+  REVFILE=/nix/var/nix/profiles/per-user/root/channels/nixos/nixos/svn-revision
+  REV_INFO=`cut -d'_' -f2 < $REVFILE`
+  case $1 in
+    nixpkgs) echo $REV_INFO | cut -d'-' -f2 ;;
+    nixos) echo $REV_INFO | cut -d'-' -f1 ;;
+    *) echo "usage: trev nixos|nixpkgs" >&2 ; return 1 ;;
+  esac
+}
+
+tgitpull() { # Pulls git trees and the Manifest
+  (cd $SM_NIX_ROOT/nixpkgs && git tag -f `trev nixpkgs` `trev nixpkgs` ; )
+  (cd $SM_NIX_ROOT/nixos && git tag -f `trev nixos` `trev nixos` ; )
+
+  tfetch &&
+  (`asroot` nix-channel --update nixos) &&
+  (cd $SM_NIX_ROOT/nixpkgs && git checkout local && git rebase `trev nixpkgs` ; ) &&
+  (cd $SM_NIX_ROOT/nixos && git checkout local && git rebase `trev nixos` ; )
+}
+
+pfetch() { # Fetches a package by name (as written in all-packages.nix)
+  nix-build --no-out-link $SM_NIX_ROOT/nixpkgs/pkgs/top-level/all-packages.nix -A $1.src --show-trace 
+}
+
+punpack() { # Unpacks the tarball to the current dir
+  aunpack `pfetch $1`
+}
+
+penv() { # Sets up build environment
+  A=`pfetch "$1"`
+  test -n "$A" || return 1
+  T=`mktemp -d`
+  test -n "$T" || return 1
+
+  cd "$T" &&
+  aunpack $A &&
+  cd `ls -1 .` &&
+  nix-build $SM_NIX_ROOT/nixpkgs --run-env -A "$1"
+
+  echo "Deleting $T" >&2
+  rm -rf "$T"
+}
+
+help() {
+  cat $THISRC | sed -n 's/^\([a-zA-Z0-9]\+\)(.*#\(.*\)/\1\t\2/g p'
+}
+
+alias nix-env="nix-env -f '<nixpkgs>'"
+
+export PS1="\n[\u@\h] \w \$ "
+
+###end-of-rc###
+
+rc=`mktemp`
+cp $HOME/.bashrc $rc
+cat $0 | sed -n '/#!\/bin\/sh/,/###end-of-rc###/p' >> $rc
+printf "export SHELL=%s\n" $SHELL >> $rc
+printf "export THISRC=%s\n" $rc >> $rc
+
+case $1 in
+  screen) screen -s $0 ;;
+  *) bash --rcfile $rc "$@" ;;
+esac
+rm $rc
+
