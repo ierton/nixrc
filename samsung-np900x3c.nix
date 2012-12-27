@@ -247,6 +247,7 @@
     gimp_2_8
     skype
     dosbox
+    xkb_switch
 
     # Custom stuff
     haskell_7_6
