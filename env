@@ -4,13 +4,13 @@ export MY_NIX_ROOT=/home/ierton/proj/nix
 export NIX_PATH="nixpkgs=$MY_NIX_ROOT/nixpkgs:nixos=$MY_NIX_ROOT/nixos:nixos-config=$MY_NIX_ROOT/nixos-config:services=/etc/nixos/services"
 
 cdt() { cd $HOME/tmp; }
-cdn() { cd $MY_NIX_ROOT; }
+cde() { cd $MY_NIX_ROOT; }
 cdp() { cd $MY_NIX_ROOT/nixpkgs; }
-cdo() { cd $MY_NIX_ROOT/nixos; }
+cdn() { cd $MY_NIX_ROOT/nixos; }
 
-vimc() { (cdn && vim nixos-config ; ); }
-vimp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
-vimo() { (cdo && vim .; ); }
+vimconf() { (cdn && vim nixos-config ; ); }
+vimallp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
+vime() { (cde && vim .; ); }
 
 asroot() {
   case `whoami` in
@@ -30,7 +30,7 @@ tofull() {
 
 tfetch() {
   ( cdp && git fetch origin ; )
-  ( cdo && git fetch origin ; )
+  ( cdn && git fetch origin ; )
 }
 
 ttest() { # Runs nixos-rebuil dry-run
@@ -88,7 +88,7 @@ penv() { # Sets up build environment
 }
 
 help() {
-  cat $MY_ERC | sed -n 's/^\([a-zA-Z0-9]\+\)(.*#\(.*\)/\1\t\2/g p'
+  cat $MY_ESRC | sed -n 's/^\([a-zA-Z0-9]\+\)(.*#\(.*\)/\1\t\t\2/g p'
 }
 
 alias nix-env="nix-env -f '<nixpkgs>'"
