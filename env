@@ -8,7 +8,7 @@ cde() { cd $MY_NIX_ROOT; }
 cdp() { cd $MY_NIX_ROOT/nixpkgs; }
 cdn() { cd $MY_NIX_ROOT/nixos; }
 
-vimconf() { (cdn && vim nixos-config ; ); }
+vimconf() { (cde && vim nixos-config ; ); }
 vimallp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
 vime() { (cde && vim .; ); }
 
@@ -54,7 +54,7 @@ trev() { # Pulls revision from nixos channel
   esac
 }
 
-tgitpull() { # Pulls git trees and the Manifest
+tgitpull() { # Pull git trees
   (cd $MY_NIX_ROOT/nixpkgs && git tag -f `trev nixpkgs` `trev nixpkgs` ; )
   (cd $MY_NIX_ROOT/nixos && git tag -f `trev nixos` `trev nixos` ; )
 
@@ -72,7 +72,7 @@ punpack() { # Unpacks the tarball to the current dir
   aunpack `pfetch $1`
 }
 
-penv() { # Sets up build environment
+penv() { # Sets up build environment (needs aunpack package)
   A=`pfetch "$1"`
   test -n "$A" || return 1
   T=`mktemp -d`
