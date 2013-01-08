@@ -1,7 +1,15 @@
 #!/bin/sh
 
 git clone https://github.com/NixOS/nixpkgs &&
-( cd nixpkgs && git fetch git@github.com:ierton/nixpkgs.git local ; )
+( cd nixpkgs &&
+  git remote add github git@github.com:ierton/nixpkgs.git &&
+  git fetch github +local:local &&
+  git checkout local
+)
 
 git clone https://github.com/NixOS/nixos &&
-( cd nixos && git fetch git@github.com:ierton/nixos.git local ; )
+( cd nixos &&
+  git remote add github git@github.com:ierton/nixos.git &&
+  git fetch github +local:local &&
+  git checkout local
+)
