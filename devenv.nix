@@ -44,6 +44,7 @@
           xlibs.kbproto
           xlibs.libXrandr
           xlibs.randrproto
+          patchelf
         ];
 
         # myEnv sets this variables to unreal values to prevent wget
