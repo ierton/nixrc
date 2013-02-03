@@ -21,6 +21,11 @@
     "fbcon"
     ];
 
+  boot.extraKernelParams = [
+    # Use better scheduler for SSD drive
+    "elevator=noop"
+    ];
+
   boot.kernelPackages = pkgs.linuxPackages_3_5;
 
   # Use the GRUB 2 boot loader.
@@ -45,12 +50,15 @@
   fileSystems = [
     { mountPoint = "/";
       device = "/dev/disk/by-label/ROOT";
+      options = "defaults,relatime,discard";
     }
     { mountPoint = "/boot";
       device = "/dev/disk/by-label/BOOT";
+      options = "defaults,relatime,discard";
     }
     { mountPoint = "/home";
       device = "/dev/disk/by-label/HOME";
+      options = "defaults,relatime,discard";
     }
   ];
 
