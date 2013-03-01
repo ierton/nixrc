@@ -1,0 +1,112 @@
+#!/bin/sh
+
+export MY_NIX_ROOT=/home/ierton/proj/nix
+export NIX_PATH="nixpkgs=$MY_NIX_ROOT/nixpkgs:nixos=$MY_NIX_ROOT/nixos:nixos-config=$MY_NIX_ROOT/nixos-config:services=/etc/nixos/services"
+
+alias nix-env="nix-env -f '<nixpkgs>'"
+
+cde() { cd $MY_NIX_ROOT; }
+cdp() { cd $MY_NIX_ROOT/nixpkgs; }
+cdn() { cd $MY_NIX_ROOT/nixos; }
+
+vimconf() { (cde && vim nixos-config ; ); }
+vimallp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
+vime() { (cde && vim .; ); }
+
+asroot() {
+  case `whoami` in
+    root)
+      echo "" ;;
+    *)
+      echo "sudo -H " ;;
+  esac
+}
+
+nixenv-fetch() {
+  ( cdp && git fetch origin ; )
+  ( cdn && git fetch origin ; )
+}
+
+nixenv-test() { # Runs nixos-rebuil dry-run
+  nixos-rebuild -I $MY_NIX_ROOT "$@" dry-run
+}
+
+nixenv-switch() { # Runs nixos-rebuild switch
+  echo $@ | grep -qwE -e '-h|--help' && {
+    echo "nixenv-switch - call nixos-rebuild with proper flags" >&2
+    return 1
+  }
+  `asroot` nixos-rebuild -I $MY_NIX_ROOT switch
+}
+
+nixenv-rev() { # Pulls revision from nixos channel
+  REVFILE=/nix/var/nix/profiles/per-user/root/channels/nixos/nixos/svn-revision
+  REV_INFO=`cut -d'_' -f2 < $REVFILE`
+  case $1 in
+    nixpkgs) echo $REV_INFO | cut -d'-' -f2 ;;
+    nixos) echo $REV_INFO | cut -d'-' -f1 ;;
+    *) printf "usage: nixenv-rev nixos|nixpkgs\n" >&2
+       printf "revision file contents: %s\n" `cat $REVFILE`  >&2 
+       return 1
+       ;;
+  esac
+}
+
+nixenv-update() { # Pull git trees
+  echo $@ | grep -qwE -e '-h|--help' && {
+    echo "nixenv-update - updates my local git trees" >&2
+    return 1
+  }
+
+  (cd $MY_NIX_ROOT/nixpkgs && git tag -f `nixenv-rev nixpkgs` `nixenv-rev nixpkgs` ; )
+  (cd $MY_NIX_ROOT/nixos && git tag -f `nixenv-rev nixos` `nixenv-rev nixos` ; )
+
+  nixenv-fetch &&
+  (`asroot` nix-channel --update nixos) &&
+  (cd $MY_NIX_ROOT/nixpkgs && git checkout local && git rebase `trev nixpkgs` ; ) &&
+  (cd $MY_NIX_ROOT/nixos && git checkout local && git rebase `trev nixos` ; )
+}
+
+nixenv-query() { # Get nix-expression by package name
+  nix-env -qa \* -P | grep -i "$1"
+}
+
+nixenv-pfetch-by-attr() { # Fetches a package by nix-expression
+  nix-build --no-out-link $MY_NIX_ROOT/nixpkgs/pkgs/top-level/all-packages.nix -A $1.src --show-trace 
+}
+
+nixenv-pfetch() { ( # Fetches a package by name
+  IFS=''
+  local q=`nixenv-query $1`
+  case `echo $q | wc -w` in
+    0) echo "no packages found" >&2 ; return 1;;
+    2) nixenv-pfetch-by-attr `echo $q | awk '{print $1}'` ;;
+    *) printf "nixenv-pfetch: more than one package found:\n" >&2
+       echo $q | awk '{printf ("  %s\n",$2)}' | sort >&2
+       return 1 ;;
+  esac
+) }
+
+nixenv-unpack() { # Unpacks the tarball to the current dir
+  aunpack `nixenv-pfetch $1`
+}
+
+nixenv-penv() { # Sets up build environment (needs aunpack package)
+  echo $@ | grep -qwE -e '-h|--help' && {
+    echo "nixenv-penv PKG - set up buid environment for the PKG package" >&2
+    return 1
+  }
+  A=`nixenv-pfetch "$1"`
+  test -n "$A" nixenvreturn 1
+  T=`mktemp -d`
+  test -n "$T" || return 1
+
+  cd "$T" &&
+  aunpack $A &&
+  cd `ls -1 .` &&
+  nix-build $MY_NIX_ROOT/nixpkgs --run-env -A "$1"
+
+  echo "Deleting $T" >&2
+  rm -rf "$T"
+}
+
