@@ -80,7 +80,9 @@ nixenv-pfetch() { ( # Fetches a package by name
   local q=`nixenv-query $1`
   case `echo $q | wc -w` in
     0) echo "no packages found" >&2 ; return 1;;
-    2) nixenv-pfetch-by-attr `echo $q | awk '{print $1}'` ;;
+    2) local attr=`echo $q | awk '{print $1}'`
+       echo $attr
+       nixenv-pfetch-by-attr $attr ;;
     *) printf "nixenv-pfetch: more than one package found:\n" >&2
        echo $q | awk '{printf ("  %s\n",$2)}' | sort >&2
        return 1 ;;
@@ -88,7 +90,9 @@ nixenv-pfetch() { ( # Fetches a package by name
 ) }
 
 nixenv-unpack() { # Unpacks the tarball to the current dir
-  aunpack `nixenv-pfetch $1`
+  nixenv-pfetch $1 | { read attr ; read arch
+    aunpack $arch
+  }
 }
 
 nixenv-penv() { # Sets up build environment (needs aunpack package)
@@ -96,17 +100,22 @@ nixenv-penv() { # Sets up build environment (needs aunpack package)
     echo "nixenv-penv PKG - set up buid environment for the PKG package" >&2
     return 1
   }
-  A=`nixenv-pfetch "$1"`
-  test -n "$A" nixenvreturn 1
-  T=`mktemp -d`
-  test -n "$T" || return 1
 
-  cd "$T" &&
-  aunpack $A &&
-  cd `ls -1 .` &&
-  nix-build $MY_NIX_ROOT/nixpkgs --run-env -A "$1"
+  ( set -e
+    local q=`nixenv-pfetch $1`
+    local attr=`echo $q | awk '{print $1}'`
+    local A=`echo $q | awk '{print $2}'`
 
-  echo "Deleting $T" >&2
-  rm -rf "$T"
+    test -n "$A" || { echo "Archive not found: $A" >&2 ; return 1; }
+    T=`mktemp -d`
+    test -n "$T" || { echo "Directory not found: $T" >&2 ; return 1; }
+
+    cd "$T"
+    aunpack $A
+    cd `ls -1 .`
+    nix-build $MY_NIX_ROOT/nixpkgs --run-env -A "$attr"
+    echo "Deleting $T" >&2
+    rm -rf "$T"
+  )
 }
 
