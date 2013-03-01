@@ -3,7 +3,6 @@
 export MY_NIX_ROOT=/home/ierton/proj/nix
 export NIX_PATH="nixpkgs=$MY_NIX_ROOT/nixpkgs:nixos=$MY_NIX_ROOT/nixos:nixos-config=$MY_NIX_ROOT/nixos-config:services=/etc/nixos/services"
 
-cdt() { cd $HOME/tmp; }
 cde() { cd $MY_NIX_ROOT; }
 cdp() { cd $MY_NIX_ROOT/nixpkgs; }
 cdn() { cd $MY_NIX_ROOT/nixos; }
