@@ -102,9 +102,9 @@ nixenv-penv() { # Sets up build environment (needs aunpack package)
   }
 
   ( set -e
-    local q=`nixenv-pfetch $1`
-    local attr=`echo $q | awk '{print $1}'`
-    local A=`echo $q | awk '{print $2}'`
+    q=`nixenv-pfetch $1`
+    attr=`echo $q | awk '{print $1}'`
+    A=`echo $q | awk '{print $2}'`
 
     test -n "$A" || { echo "Archive not found: $A" >&2 ; return 1; }
     T=`mktemp -d`
