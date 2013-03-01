@@ -68,7 +68,7 @@ nixenv-update() { # Pull git trees
 }
 
 nixenv-query() { # Get nix-expression by package name
-  nix-env -qa \* -P | grep -i "$1"
+  nix-env -qa \* -P | grep -i "$@"
 }
 
 nixenv-pfetch-by-attr() { # Fetches a package by nix-expression
@@ -77,7 +77,7 @@ nixenv-pfetch-by-attr() { # Fetches a package by nix-expression
 
 nixenv-pfetch() { ( # Fetches a package by name
   IFS=''
-  local q=`nixenv-query $1`
+  local q=`nixenv-query -w $1`
   case `echo $q | wc -w` in
     0) echo "no packages found" >&2 ; return 1;;
     2) local attr=`echo $q | awk '{print $1}'`
