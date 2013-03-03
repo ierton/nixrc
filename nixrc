@@ -95,6 +95,18 @@ nixenv-unpack() { # Unpacks the tarball to the current dir
   }
 }
 
+nixenv-patch() {
+  test -d "$NIX_UNPACK" || {
+      echo "Run this command from the nixenv-penv shell" >&2
+      return 1;
+    }
+
+  (
+    cd $NIX_UNPACK &&
+    diff -ruN $NIX_UNPACK_SRC_ORIG $NIX_UNPACK_SRC
+  )
+}
+
 nixenv-penv() { # Sets up build environment (needs aunpack package)
   echo $@ | grep -qwE -e '-h|--help' && {
     echo "nixenv-penv PKG - set up buid environment for the PKG package" >&2
@@ -112,7 +124,12 @@ nixenv-penv() { # Sets up build environment (needs aunpack package)
 
     cd "$T"
     aunpack $A
-    cd `ls -1 .`
+    dir=`ls -1 .`
+    cp -r $dir $dir.orig 
+    export NIX_UNPACK=`pwd`
+    export NIX_UNPACK_SRC=$dir
+    export NIX_UNPACK_SRC_ORIG=$dir.orig
+    cd $dir
     nix-build $MY_NIX_ROOT/nixpkgs --run-env -A "$attr"
     echo "Deleting $T" >&2
     rm -rf "$T"
