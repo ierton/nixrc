@@ -26,7 +26,8 @@
     "elevator=noop"
     ];
 
-  boot.kernelPackages = pkgs.linuxPackages_3_5;
+  # boot.kernelPackages = pkgs.linuxPackages_3_5;
+  boot.kernelPackages = pkgs.linuxPackages;
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -54,7 +55,7 @@
     }
     { mountPoint = "/boot";
       device = "/dev/disk/by-label/BOOT";
-      options = "defaults,relatime,discard";
+      options = "defaults,relatime";
     }
     { mountPoint = "/home";
       device = "/dev/disk/by-label/HOME";
@@ -86,6 +87,12 @@
         %wheel      ALL=(ALL) SETENV: NOPASSWD: ALL
       '';
   };
+
+  # services.cron = {
+  #   systemCronJobs = [
+  #     "* * * * * test ls -l / > /tmp/cronout 2>&1"
+  #   ];
+  # };
 
   services.ntp = {
     enable = true;
@@ -232,7 +239,7 @@
     evince
     xneur
     gxneur
-    MPlayer
+    mplayer
     xlibs.xev
     xfontsel
     xlsfonts
@@ -249,7 +256,6 @@
     easytag
     gqview
     libreoffice
-    gnome_mplayer
     pidgin
     wireshark
     gimp_2_8
