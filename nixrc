@@ -1,19 +1,19 @@
 #!/bin/sh
 
-export MY_NIX_ROOT=/home/ierton/proj/nix
-export NIX_PATH="nixpkgs=$MY_NIX_ROOT/nixpkgs:nixos=$MY_NIX_ROOT/nixos:nixos-config=$MY_NIX_ROOT/nixos-config:services=/etc/nixos/services"
+export NIX_DEV_ROOT=/home/ierton/proj/nix
+export NIX_PATH="nixpkgs=$NIX_DEV_ROOT/nixpkgs:nixos=$NIX_DEV_ROOT/nixos:nixos-config=$NIX_DEV_ROOT/nixos-config:services=/etc/nixos/services"
 
 alias nix-env="nix-env -f '<nixpkgs>'"
 
-cde() { cd $MY_NIX_ROOT; }
-cdp() { cd $MY_NIX_ROOT/nixpkgs; }
-cdn() { cd $MY_NIX_ROOT/nixos; }
+cde() { cd $NIX_DEV_ROOT; }
+cdp() { cd $NIX_DEV_ROOT/nixpkgs; }
+cdn() { cd $NIX_DEV_ROOT/nixos; }
 
 vimconf() { (cde && vim nixos-config ; ); }
 vimallp() { (cdp && vim pkgs/top-level/all-packages.nix; ); }
 vime() { (cde && vim .; ); }
 
-asroot() {
+nix-dev-asroot() {
   case `whoami` in
     root)
       echo "" ;;
@@ -22,117 +22,160 @@ asroot() {
   esac
 }
 
-nixenv-fetch() {
-  ( cdp && git fetch origin ; )
-  ( cdn && git fetch origin ; )
-}
+nix-dev-rebuild() { `nix-dev-asroot` `which nixos-rebuild` -I $NIX_DEV_ROOT "$@" ; }
+nix-dev-rebuild-switch() { nix-dev-rebuild switch "$@" ; }
+nix-dev-rebuild-dryrun() { nix-dev-rebuild dry-run "$@";  }
 
-nixenv-test() { # Runs nixos-rebuil dry-run
-  nixos-rebuild -I $MY_NIX_ROOT "$@" dry-run
-}
-
-nixenv-switch() { # Runs nixos-rebuild switch
-  echo $@ | grep -qwE -e '-h|--help' && {
-    echo "nixenv-switch - call nixos-rebuild with proper flags" >&2
-    return 1
-  }
-  `asroot` nixos-rebuild -I $MY_NIX_ROOT switch
-}
-
-nixenv-rev() { # Pulls revision from nixos channel
-  REVFILE=/nix/var/nix/profiles/per-user/root/channels/nixos/nixos/svn-revision
-  REV_INFO=`cut -d'_' -f2 < $REVFILE`
+nix-dev-revision() {
+  local revfile=/nix/var/nix/profiles/per-user/root/channels/nixos/nixos/svn-revision
+  local rev_info=`cut -d'_' -f2 < $revfile`
   case $1 in
-    nixpkgs) echo $REV_INFO | cut -d'-' -f2 ;;
-    nixos) echo $REV_INFO | cut -d'-' -f1 ;;
-    *) printf "usage: nixenv-rev nixos|nixpkgs\n" >&2
-       printf "revision file contents: %s\n" `cat $REVFILE`  >&2 
+    nixpkgs) echo $rev_info | cut -d'-' -f2 ;;
+    nixos) echo $rev_info | cut -d'-' -f1 ;;
+    *) printf "usage: nix-dev-revision nixos|nixpkgs\n" >&2
+       printf "revision file contents: %s\n" `cat $revfile`  >&2 
        return 1
        ;;
   esac
 }
 
-nixenv-update() { # Pull git trees
+nix-dev-fetch() {
+  ( cdp && git fetch origin ; )
+  ( cdn && git fetch origin ; )
+}
+
+nix-dev-update() {
   echo $@ | grep -qwE -e '-h|--help' && {
-    echo "nixenv-update - updates my local git trees" >&2
+    echo "nix-dev-update - updates my local git trees" >&2
     return 1
   }
-
-  (cd $MY_NIX_ROOT/nixpkgs && git tag -f `nixenv-rev nixpkgs` `nixenv-rev nixpkgs` ; )
-  (cd $MY_NIX_ROOT/nixos && git tag -f `nixenv-rev nixos` `nixenv-rev nixos` ; )
-
-  nixenv-fetch &&
-  (`asroot` nix-channel --update nixos) &&
-  (cd $MY_NIX_ROOT/nixpkgs && git checkout local && git rebase `trev nixpkgs` ; ) &&
-  (cd $MY_NIX_ROOT/nixos && git checkout local && git rebase `trev nixos` ; )
-}
-
-nixenv-query() { # Get nix-expression by package name
-  nix-env -qa \* -P | grep -i "$@"
-}
-
-nixenv-pfetch-by-attr() { # Fetches a package by nix-expression
-  nix-build --no-out-link $MY_NIX_ROOT/nixpkgs/pkgs/top-level/all-packages.nix -A $1.src --show-trace 
-}
-
-nixenv-pfetch() { ( # Fetches a package by name
-  IFS=''
-  local q=`nixenv-query -w $1`
-  case `echo $q | wc -w` in
-    0) echo "no packages found" >&2 ; return 1;;
-    2) local attr=`echo $q | awk '{print $1}'`
-       echo $attr
-       nixenv-pfetch-by-attr $attr ;;
-    *) printf "nixenv-pfetch: more than one package found:\n" >&2
-       echo $q | awk '{printf ("  %s\n",$2)}' | sort >&2
-       return 1 ;;
-  esac
-) }
-
-nixenv-unpack() { # Unpacks the tarball to the current dir
-  nixenv-pfetch $1 | { read attr ; read arch
-    aunpack $arch
-  }
-}
-
-nixenv-patch() {
-  test -d "$NIX_UNPACK" || {
-      echo "Run this command from the nixenv-penv shell" >&2
-      return 1;
-    }
 
   (
-    cd $NIX_UNPACK &&
-    diff -ruN $NIX_UNPACK_SRC_ORIG $NIX_UNPACK_SRC
+    set -e
+
+    (cd $NIX_DEV_ROOT/nixpkgs && git tag -f `nixenv-rev nixpkgs` `nixenv-rev nixpkgs` ; )
+    (cd $NIX_DEV_ROOT/nixos && git tag -f `nixenv-rev nixos` `nixenv-rev nixos` ; )
+
+    echo Fetching changes
+    nix-dev-fetch
+    `nix-dev-asroot` nix-channel --update nixos
+
+    ( echo Updating nixpkgs tree
+      cd $NIX_DEV_ROOT/nixpkgs
+      git checkout local
+      git rebase `trev nixpkgs`
+    )
+
+    ( echo Updating nixos tree
+      cd $NIX_DEV_ROOT/nixos
+      git checkout local
+      git rebase `trev nixos`
+    )
   )
 }
 
-nixenv-penv() { # Sets up build environment (needs aunpack package)
-  echo $@ | grep -qwE -e '-h|--help' && {
-    echo "nixenv-penv PKG - set up buid environment for the PKG package" >&2
-    return 1
-  }
+nix-dev-attr-by-name() {(
+  IFS=''
+  Q=`nix-env -qa \* -P | grep -iw "$1"`
+  case `echo $Q | wc -w` in
+    0) echo "nix-dev-attr-by-name: No packages found" >&2 ;
+       exit 1 ;;
+    2) ATTR=`echo $Q | awk '{print $1}'`
+       echo "$ATTR";;
+    *) printf "nix-dev-attr-by-name: More than one package found:\n" >&2
+       echo $Q | awk '{printf ("  %s\n",$2)}' | sort >&2
+       exit 1 ;;
+  esac
+)}
+
+nix-dev-pfetch-by-attr() {
+  nix-build --no-out-link $NIX_DEV_ROOT/nixpkgs/pkgs/top-level/all-packages.nix -A $1.src --show-trace 
+}
+
+nix-dev-pfetch() {(
+  nix-dev-attr-by-name $1 | {
+    read ATTR && (
+    nix-dev-pfetch-by-attr $ATTR
+  )}
+)}
+
+nix-dev-unpack() {(
+  NAME=""
+  FETCHER=nix-dev-pfetch
+  while test -n "$1" ; do
+    case $1 in
+      -h|--help)
+          echo "nix-dev-unpack [-A] NAME - Unpacks package into current directory" >&2
+          exit 1 ;;
+      -A)
+          FETCHER=nix-dev-pfetch-by-attr;;
+      *)
+          NAME=$1;;
+    esac
+    shift
+  done
+
+  $FETCHER $NAME | { read path && (
+    if test -d $path ; then cp -r $path ./out ; else aunpack $path ; fi
+  )}
+)}
+
+nix-dev-patch() {(
+  if ! test -d "$NIX_DEV_UNPACK" ; then
+    echo "Run this command from the nixenv-penv shell" >&2
+    exit 1;
+  fi
+
+  cd "$NIX_DEV_UNPACK" &&
+  diff -ruN $NIX_DEV_UNPACK_SRC_ORIG $NIX_DEV_UNPACK_SRC
+
+)}
+
+nix-dev-penv() {(
+  NAME=""
+  ATTR=""
+  while test -n "$1" ; do
+    case $1 in
+      -h|--help)
+          echo "nix-dev-penv [-A] NAME - Set up package buid environment" >&2
+          exit 1;;
+      -A)
+          ATTR=$1 ;;
+      *)
+          NAME=$1;;
+    esac
+    shift
+  done
+
+  if test -z "$ATTR" ; then
+    ATTR=`nix-dev-attr-by-name $NAME`
+    if test "$?" != "0" ; then
+      exit 2
+    fi
+  fi
+
+  SRC=`nix-dev-pfetch-by-attr $ATTR`
+  if test "$?" != "0" ; then
+    exit 3
+  fi
+
+  T=`mktemp -d`
 
   ( set -e
-    q=`nixenv-pfetch $1`
-    attr=`echo $q | awk '{print $1}'`
-    A=`echo $q | awk '{print $2}'`
-
-    test -n "$A" || { echo "Archive not found: $A" >&2 ; return 1; }
-    T=`mktemp -d`
-    test -n "$T" || { echo "Directory not found: $T" >&2 ; return 1; }
-
     cd "$T"
-    aunpack $A
+    if test -d $SRC ; then cp -r $SRC ./out ; else aunpack $SRC ; fi
     dir=`ls -1 .`
     cp -r $dir $dir.orig 
-    export NIX_UNPACK=`pwd`
-    export NIX_UNPACK_SRC=$dir
-    export NIX_UNPACK_SRC_ORIG=$dir.orig
+    export NIX_DEV_UNPACK=`pwd`
+    export NIX_DEV_UNPACK_SRC=$dir
+    export NIX_DEV_UNPACK_SRC_ORIG=$dir.orig
     cd $dir
-    nix-build $MY_NIX_ROOT/nixpkgs --run-env -A "$attr"
-    echo "Deleting $T" >&2
-    rm -rf "$T"
+    nix-build $NIX_DEV_ROOT/nixpkgs --run-env -A "$ATTR"
   )
-}
+
+  echo "Deleting $T" >&2
+  rm -rf "$T"
+)}
+
+nix-dev-follow() { readlink `which $1` ; }
 
