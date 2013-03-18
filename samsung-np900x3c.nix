@@ -13,6 +13,8 @@
 
   hardware.firmware = [ "/root/firmware" ];
 
+  hardware.bluetooth.enable = true;
+
   # Specify all kernel modules that are necessary for mounting the root
   # filesystem.
   boot.initrd.kernelModules = [ ];
@@ -204,6 +206,7 @@
     zip
     unzip
     unrar
+    p7zip
     openssl
     cacert
     w3m
@@ -251,17 +254,15 @@
     xfce.xfce4_cpufreq_plugin
     xfce.xfce4_systemload_plugin
     xfce.gigolo
-    xfce.xfce4_taskmanager
+    xfce.xfce4taskmanager
     vlc
     easytag
-    gqview
     libreoffice
     pidgin
     wireshark
     gimp_2_8
     skype
     dosbox
-    xkb_switch
 
     # Custom stuff
     haskell_7_6
