@@ -39,10 +39,63 @@ nix-dev-revision() {
   esac
 }
 
+# Prints the revision number of the latest nixos/nixpkgs Hydra build.
+nix-dev-revision-latest() {
+  local rev=`wget -q  -S --output-document - http://nixos.org/releases/nixos/channels/nixos-unstable 2>&1 |
+    grep Location | head -n 1 | awk -F '_' '{print $2}'`
+  if test "$?" != "0" ; then
+    return $?
+  fi
+  case $1 in
+    nixpkgs) echo $rev | cut -d'-' -f2 ;;
+    nixos) echo $rev | cut -d'-' -f1 ;;
+    *) printf "usage: nix-dev-revision-latest nixos|nixpkgs\n" >&2
+       printf "revision string: %s\n" $rev  >&2 
+       return 1
+       ;;
+  esac
+}
+
 nix-dev-fetch() {
   ( cdp && git fetch origin ; )
   ( cdn && git fetch origin ; )
 }
+
+# Check whether simple rebase is possible or not
+nix-dev-rebase-check() {
+   local out=`git log --oneline  --no-merges local --not refs/remotes/origin/master local`
+   if test -n "$out" ; then
+     echo "nix-dev-rebase-check: failed: looks like there is a tricky case in the git repo. Please check it yourself" >&2
+     return 1;
+   fi
+}
+
+nix-dev-rebase() {(
+  echo $@ | grep -qwE -e '-h|--help' && {
+    echo "nix-dev-rebase nixos|nixpkgs - Rebase the branch named local up to the latest binary revision" >&2
+    return 1
+  }
+
+  local tree=$1
+  test -z "$tree" && {
+    echo "Argument required, try --help" >&2
+    return 1
+  }
+
+  (
+    set -e
+    cd $NIX_DEV_ROOT/$tree
+    git fetch origin
+    nix-dev-rebase-check
+    git checkout local
+    base=`git merge-base local origin/master`
+    git branch -f local-$base
+    newref=`nix-dev-revision-latest $tree`
+    echo "Going to rebase to $newref"
+    git rebase $newref
+  )
+
+)}
 
 nix-dev-update() {
   echo $@ | grep -qwE -e '-h|--help' && {
@@ -50,28 +103,11 @@ nix-dev-update() {
     return 1
   }
 
-  (
-    set -e
-
-    (cd $NIX_DEV_ROOT/nixpkgs && git tag -f `nixenv-rev nixpkgs` `nixenv-rev nixpkgs` ; )
-    (cd $NIX_DEV_ROOT/nixos && git tag -f `nixenv-rev nixos` `nixenv-rev nixos` ; )
-
-    echo Fetching changes
-    nix-dev-fetch
-    `nix-dev-asroot` nix-channel --update nixos
-
-    ( echo Updating nixpkgs tree
-      cd $NIX_DEV_ROOT/nixpkgs
-      git checkout local
-      git rebase `trev nixpkgs`
-    )
-
-    ( echo Updating nixos tree
-      cd $NIX_DEV_ROOT/nixos
-      git checkout local
-      git rebase `trev nixos`
-    )
-  )
+  echo "Rebasing nixos"
+  nix-dev-rebase nixos
+  echo "Rebasing nixpkgs"
+  nix-dev-rebase nixpkgs
+  `nix-dev-asroot` nix-channel --update nixos
 }
 
 nix-dev-attr-by-name() {(
