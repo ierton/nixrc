@@ -24,6 +24,8 @@ nix-dev-asroot() {
 
 nix-dev-rebuild() { `nix-dev-asroot` `which nixos-rebuild` -I $NIX_DEV_ROOT "$@" ; }
 nix-dev-rebuild-switch() { nix-dev-rebuild switch "$@" ; }
+# nix-dev-rebuild-build() { nixos-rebuild -I $NIX_DEV_ROOT build "$@" ; }
+nix-dev-rebuild-build() { nix-dev-rebuild build "$@";  }
 nix-dev-rebuild-dryrun() { nix-dev-rebuild dry-run "$@";  }
 
 nix-dev-revision() {
@@ -72,7 +74,7 @@ nix-dev-rebase-check() {
 
 nix-dev-rebase() {(
   echo $@ | grep -qwE -e '-h|--help' && {
-    echo "nix-dev-rebase nixos|nixpkgs - Rebase the branch named local up to the latest binary revision" >&2
+    echo "nix-dev-rebase nixos|nixpkgs - Rebase the local branch onto the latest revision" >&2
     return 1
   }
 
@@ -83,7 +85,7 @@ nix-dev-rebase() {(
   }
 
   (
-    set -e
+    set -ex
     cd $NIX_DEV_ROOT/$tree
     git fetch origin
     nix-dev-rebase-check
@@ -91,9 +93,14 @@ nix-dev-rebase() {(
     base=`git merge-base local origin/master`
     git branch -f local-$base
     newref=`nix-dev-revision-latest $tree`
-    echo "Going to rebase to $newref"
     git rebase $newref
-  )
+  ) 
+
+  if [ "$?" != "0" ] ; then
+    echo "Automatic rebasing of $tree failed." >&2
+    echo "You may go to $NIX_DEV_ROOT/$tree and fix it manually." >&2
+    exit 1
+  fi
 
 )}
 
@@ -103,11 +110,12 @@ nix-dev-update() {
     return 1
   }
 
-  echo "Rebasing nixos"
-  nix-dev-rebase nixos
-  echo "Rebasing nixpkgs"
-  nix-dev-rebase nixpkgs
-  `nix-dev-asroot` nix-channel --update nixos
+  (
+    set -e
+    nix-dev-rebase nixos
+    nix-dev-rebase nixpkgs
+    `nix-dev-asroot` nix-channel --update nixos
+  )
 }
 
 nix-dev-attr-by-name() {(
@@ -124,9 +132,10 @@ nix-dev-attr-by-name() {(
   esac
 )}
 
-nix-dev-pfetch-by-attr() {
+nix-dev-pfetch-by-attr() { (
+  set -e
   nix-build --no-out-link $NIX_DEV_ROOT/nixpkgs/pkgs/top-level/all-packages.nix -A $1.src --show-trace 
-}
+) }
 
 nix-dev-pfetch() {(
   nix-dev-attr-by-name $1 | {
@@ -176,7 +185,8 @@ nix-dev-penv() {(
           echo "nix-dev-penv [-A] NAME - Set up package buid environment" >&2
           exit 1;;
       -A)
-          ATTR=$1 ;;
+          ATTR=$2
+          shift ;;
       *)
           NAME=$1;;
     esac
