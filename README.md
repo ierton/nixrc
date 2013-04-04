@@ -20,7 +20,7 @@ the details.
 
     $ . ./nixrc
     
-    [ierton@greyblade:~]$ nix-dev-
+    $ nix-dev-
     nix-dev-asroot           nix-dev-pfetch           nix-dev-rebuild-dryrun
     nix-dev-attr-by-name     nix-dev-pfetch-by-attr   nix-dev-rebuild-switch
     nix-dev-fetch            nix-dev-rebase           nix-dev-revision
@@ -42,11 +42,11 @@ a patch showing the difference between original sources and modified ones.
 
 nix-dev-revision-latest
 -----------------------
-Determines latest commits for which the system was built by Hydra successfully.
+Determines commits which were used by Hydra to build the newest available system.
 
 nix-dev-update
 --------------
 Does many things:
 * Updates nixos and nixpkgs from the origin/master
 * Determines right commits in both repos to base upon
-* Rebases 'local' branches in both repos upon new base, saving current local as local-$oldbase
+* Rebases 'local' branches in both repos upon new bases, saving current 'local' as 'local-$oldbase'
