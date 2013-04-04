@@ -34,11 +34,19 @@ nixrc
 nix-dev-penv
 ------------
 Usage
-nix-dev-penv -A ATTR
-nix-dev-penv PACKAGE
+    nix-dev-penv -A ATTR
+    nix-dev-penv PACKAGE
 
-Sets up package build environment in a new shell.
+Sets up package build environment in a new shell. nix-dev-patch can be used from that shell to generate
+a patch showing the difference between original sources and modified ones.
 
 nix-dev-revision-latest
 -----------------------
 Determines latest commits for which the system was built by Hydra successfully.
+
+nix-dev-update
+--------------
+Does many things:
+* Updates nixos and nixpkgs from the origin/master
+* Determines right commits in both repos to base upon
+* Rebases 'local' branches in both repos upon new base, saving current local as local-$oldbase
