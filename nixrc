@@ -1,6 +1,7 @@
 #!/bin/sh
 
-export NIX_DEV_ROOT=/home/ierton/proj/nix
+if test -d "$NIX_DEV_ROOT" ; then
+
 export NIX_PATH="nixpkgs=$NIX_DEV_ROOT/nixpkgs:nixos=$NIX_DEV_ROOT/nixos:nixos-config=$NIX_DEV_ROOT/nixos-config:services=/etc/nixos/services"
 
 alias nix-env="nix-env -f '<nixpkgs>'"
@@ -225,3 +226,6 @@ nix-dev-penv() {(
 
 nix-dev-follow() { readlink `which $1` ; }
 
+else
+  echo "NIX_DEV_ROOT is not a directory. nix-dev functions will be disabled" >&2
+fi
