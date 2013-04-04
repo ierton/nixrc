@@ -6,14 +6,14 @@
 {
   require = [
       /etc/nixos/hardware-configuration.nix
-      ./devenv.nix
-      ./subpixel.nix
-      ./haskell_7_6.nix
+      ./inc/devenv.nix
+      ./inc/subpixel.nix
+      ./inc/haskell_7_6.nix
     ];
 
   hardware.firmware = [ "/root/firmware" ];
 
-  hardware.bluetooth.enable = true;
+  hardware.bluetooth.enable = false;
 
   # Specify all kernel modules that are necessary for mounting the root
   # filesystem.
@@ -48,6 +48,7 @@
     wireless.enable = false;
     useDHCP = false;
     wicd.enable = true;
+    # networkmanager.enable = true;
   };
 
   fileSystems = [
@@ -123,6 +124,7 @@
     desktopManager.xfce.enable = true;
 
     displayManager = {
+      # job.logsXsession = true;
       slim = {
         enable = true;
         defaultUser = "ierton";
@@ -155,23 +157,23 @@
       };
   };
 
-  services.postfix = {
-    enable = true;
-    setSendmail = true;
-    # Thanks to http://rs20.mine.nu/w/2011/07/gmail-as-relay-host-in-postfix/
-    extraConfig = ''
-      relayhost=[smtp.gmail.com]:587
-      smtp_use_tls=yes
-      smtp_tls_CAfile=/etc/ssl/certs/ca-bundle.crt
-      smtp_sasl_auth_enable=yes
-      smtp_sasl_password_maps=hash:/etc/postfix.local/sasl_passwd
-      smtp_sasl_security_options=noanonymous
-    '';
-  };
+  # services.postfix = {
+  #   enable = true;
+  #   setSendmail = true;
+  #   # Thanks to http://rs20.mine.nu/w/2011/07/gmail-as-relay-host-in-postfix/
+  #   extraConfig = ''
+  #     relayhost=[smtp.gmail.com]:587
+  #     smtp_use_tls=yes */
+  #     smtp_tls_CAfile=/etc/ssl/certs/ca-bundle.crt
+  #     smtp_sasl_auth_enable=yes
+  #     smtp_sasl_password_maps=hash:/etc/postfix.local/sasl_passwd
+  #     smtp_sasl_security_options=noanonymous
+  #   '';
+  # };
 
-  services.acpid = {
-    enable = true;
-  };
+  # services.acpid = {
+  #   enable = true;
+  # };
 
   fonts = {
     enableFontConfig = true;
@@ -192,7 +194,7 @@
     ];
   };
 
-  environment.pathsToLink = ["/"];
+  #environment.pathsToLink = ["/"];
 
   environment.systemPackages = with pkgs ; [
     # Basic tools
@@ -214,16 +216,13 @@
     screen
     fuse
     bashCompletion
-    irssi
     mpg321
     catdoc
-    graphviz
+    # graphviz
     tftp_hpa
-    unetbootin
+    # unetbootin
     rpm
-    acpid
     atool
-    acpi
 
     # X11 apps
     xorg.xdpyinfo
@@ -259,7 +258,6 @@
     easytag
     libreoffice
     pidgin
-    wireshark
     gimp_2_8
     skype
     dosbox

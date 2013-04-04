@@ -13,7 +13,7 @@ in {
 
     packageOverrides = pkgs: {
 
-      haskell_7_6 = (pkgs.haskellPackages_ghc761.ghcWithPackages haskbase);
+      haskell_7_6 = (pkgs.haskellPackages_ghc762.ghcWithPackages haskbase);
 
     };
   };

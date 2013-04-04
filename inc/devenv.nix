@@ -45,6 +45,10 @@
           xlibs.libXrandr
           xlibs.randrproto
           patchelf
+          i386_toolchain.gcc
+          i386_toolchain.binutils
+          arm_toolchain.gcc
+          arm_toolchain.binutils
         ];
 
         # myEnv sets this variables to unreal values to prevent wget
