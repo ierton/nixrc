@@ -44,6 +44,7 @@ the details.
 nix-dev-penv
 ------------
 Usage:
+
     nix-dev-penv -A ATTR
     nix-dev-penv PACKAGE
 
@@ -53,6 +54,7 @@ a patch showing the difference between original sources and modified ones.
 nix-dev-revision-latest
 -----------------------
 Example:
+
     $ nix-dev-revision-latest 
     usage: nix-dev-revision-latest nixos|nixpkgs
     revision string: 1def5ba-48a4e91
