@@ -8,8 +8,8 @@ Configurations
 * nixos-intel-ideapad.nix
 * nixos-samsung-np900x3c.nix
 
-Dev environment
-===============
+Nixrc script
+============
 
 Nixrc is a plain bash script carefully written to assist in NixOS development.
 
