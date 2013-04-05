@@ -4,6 +4,18 @@ NixOS environment
 This folder contains configuration files for my [NixOS](http://www.nixos.org) systems as well as 
 nixrc script containing some usefull functions for NixOS development.
 
+Configurations
+==============
+
+* nixos-homeserver.nix
+* nixos-intel-ideapad.nix
+* nixos-samsung-np900x3c.nix
+
+nixrc
+=====
+
+Nixrc is a plain bash script carefully written to assist in NixOS development.
+
 Deploying
 ---------
 
@@ -28,12 +40,10 @@ the details.
     nix-dev-patch            nix-dev-rebuild          nix-dev-unpack
     nix-dev-penv             nix-dev-rebuild-build    nix-dev-update
 
-nixrc
-=====
 
 nix-dev-penv
 ------------
-Usage
+Usage:
     nix-dev-penv -A ATTR
     nix-dev-penv PACKAGE
 
@@ -42,7 +52,15 @@ a patch showing the difference between original sources and modified ones.
 
 nix-dev-revision-latest
 -----------------------
-Determines commits which were used by Hydra to build the newest available system.
+Example:
+    $ nix-dev-revision-latest 
+    usage: nix-dev-revision-latest nixos|nixpkgs
+    revision string: 1def5ba-48a4e91
+
+    $ nix-dev-revision-latest  nixpkgs
+    48a4e91
+
+Shows latest stable commit, i.e. commit wich has a Hydra build associated.
 
 nix-dev-update
 --------------
@@ -50,3 +68,4 @@ Does many things:
 * Updates nixos and nixpkgs from the origin/master
 * Determines right commits in both repos to base upon
 * Rebases 'local' branches in both repos upon new bases, saving current 'local' as 'local-$oldbase'
+
