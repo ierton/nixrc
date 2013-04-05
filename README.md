@@ -1,15 +1,14 @@
+NixOS Configurations
+====================
 This folder contains configuration files for my [NixOS](http://www.nixos.org) systems as well as 
 nixrc script containing some usefull functions for NixOS development.
-
-Configurations
-==============
 
 * nixos-homeserver.nix
 * nixos-intel-ideapad.nix
 * nixos-samsung-np900x3c.nix
 
-Nixrc script
-============
+Nix-Dev helpers
+===============
 
 Nixrc is a plain bash script carefully written to assist in NixOS development.
 
