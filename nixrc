@@ -212,6 +212,7 @@ nix-dev-penv() {(
     cd "$T"
     if test -d $SRC ; then cp -r $SRC ./out ; else aunpack $SRC ; fi
     dir=`ls -1 .`
+    ( cd $dir && find -name '*[ch]' -or -name '*.cpp' | xargs ctags ; )
     cp -r $dir $dir.orig 
     export NIX_DEV_UNPACK=`pwd`
     export NIX_DEV_UNPACK_SRC=$dir
