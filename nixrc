@@ -225,7 +225,10 @@ nix-dev-penv() {(
   rm -rf "$T"
 )}
 
-nix-dev-follow() { readlink `which $1` ; }
+nix-dev-follow() {
+  local path=$(readlink `which $1`)
+  cd `echo $path | awk -F '/' '{printf("/%s/%s/%s\n",$2,$3,$4);}'`
+}
 
 else
   echo "NIX_DEV_ROOT is not a directory. nix-dev functions will be disabled" >&2
