@@ -6,7 +6,7 @@
 {
   require = [
       /etc/nixos/hardware-configuration.nix
-      ./inc/haskell_7_6.nix
+      #./inc/haskell_7_6.nix
     ];
 
   hardware.firmware = [ "/root/firmware" ];
@@ -30,28 +30,38 @@
 
   networking = {
     hostName = "goodfellow";
-    interfaceMonitor.enable = true;
+    interfaceMonitor.enable = false;
     useDHCP = true;
-    wireless.enable = false;
+    #interfaces = {
+    #  enp0s7 = {
+    #    ipAddress = "192.168.1.20";
+    #    subnetMask = "255.255.255.0";
+    #  };
+    #};
+
+    #firewall = {
+    #  allowedTCPPorts = [ 80 22 2222 ];
+    #  allowPing = true;
+    #};
   };
 
   fileSystems = [
     { mountPoint = "/";
-      device = "/dev/disk/by-label/ROOT";
-      options = "defaults,relatime,discard";
+      device = "/dev/disk/by-label/ROOT_NIXOS";
+      options = "defaults,relatime";
     }
     { mountPoint = "/boot";
-      device = "/dev/disk/by-label/BOOT";
+      device = "/dev/sdb5";
       options = "defaults,relatime";
     }
     { mountPoint = "/home";
       device = "/dev/sdb7";
-      options = "defaults,relatime,discard";
+      options = "defaults,relatime";
     }
   ];
 
   swapDevices = [
-    { device = "/dev/disk/by-label/SWAP"; }
+    { device = "/dev/sdb1"; }
   ];
 
   powerManagement = {
@@ -88,6 +98,8 @@
 
   services.openssh = {
     enable = true;
+    ports = [22 2222];
+    permitRootLogin = "yes";
   };
 
   services.xserver = {
@@ -111,6 +123,17 @@
   # services.acpid = {
   #   enable = true;
   # };
+
+  users.extraUsers = {
+    grwlf = {
+      uid = 1000;
+      group = "users";
+      extraGroups = ["wheel"];
+      home = "/home/ierton";
+      isSystemUser = false;
+      useDefaultShell = true;
+    };
+  };
 
   #environment.pathsToLink = ["/"];
 
@@ -139,10 +162,12 @@
     tftp_hpa
     rpm
     atool
+    vim
+    gitFull
 
     # Custom stuff
-    haskell_7_6
-    devenv
+    #haskell_7_6
+    #devenv
   ];
 }
 
