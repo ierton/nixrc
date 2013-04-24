@@ -94,7 +94,7 @@ nix-dev-rebase() {(
     base=`git merge-base local origin/master`
     git branch -f local-$base
     newref=`nix-dev-revision-latest $tree`
-    git rebase $newref
+    git rebase -f $newref
   ) 
 
   if [ "$?" != "0" ] ; then

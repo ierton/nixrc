@@ -20,35 +20,11 @@
           curl
           sqlite
           cmake
-          qt4
           python
-          glew
-          mesa
-          freetype
-          fontconfig
           ncurses
           curl
           zlib
-          opencv
-          xlibs.xproto
-          xlibs.libX11
-          xlibs.libXt
-          xlibs.libXft
-          xlibs.libXext
-          xlibs.libSM
-          xlibs.libICE
-          xlibs.xextproto
-          xlibs.libXrender
-          xlibs.renderproto
-          xlibs.libxkbfile
-          xlibs.kbproto
-          xlibs.libXrandr
-          xlibs.randrproto
           patchelf
-          i386_toolchain.gcc
-          i386_toolchain.binutils
-          arm_toolchain.gcc
-          arm_toolchain.binutils
         ];
 
         # myEnv sets this variables to unreal values to prevent wget

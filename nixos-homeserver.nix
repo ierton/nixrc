@@ -6,7 +6,8 @@
 {
   require = [
       /etc/nixos/hardware-configuration.nix
-      #./inc/haskell_7_6.nix
+      ./inc/haskell_7_6.nix
+      ./inc/devenv.nix
     ];
 
   hardware.firmware = [ "/root/firmware" ];
@@ -157,8 +158,6 @@
     screen
     fuse
     bashCompletion
-    mpg321
-    catdoc
     tftp_hpa
     rpm
     atool
@@ -166,8 +165,8 @@
     gitFull
 
     # Custom stuff
-    #haskell_7_6
-    #devenv
+    haskell_7_6
+    devenv
   ];
 }
 
