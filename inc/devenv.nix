@@ -6,7 +6,7 @@
 
     packageOverrides = pkgs: {
 
-      devenv = { enableCross , enableX11 } : let
+      devenv = { enableCross ? false , enableX11 ? false } : let
 
         common = with pkgs; [
           autoconf

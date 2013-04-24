@@ -166,7 +166,7 @@
 
     # Custom stuff
     haskell_7_6
-    devenv
+    (devenv {})
   ];
 }
 
