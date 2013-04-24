@@ -6,9 +6,10 @@
 
     packageOverrides = pkgs: {
 
-      devenv = { enableCross , enableX11 } : let
+      devenv = pkgs.myEnvFun {
+        name = "dev";
 
-        common = with pkgs; [
+        buildInputs = with pkgs; [
           autoconf
           automake
           gettext
@@ -19,18 +20,16 @@
           curl
           sqlite
           cmake
+          qt4
           python
+          glew
+          mesa
+          freetype
+          fontconfig
           ncurses
           curl
           zlib
-          patchelf
-          m4
-          perlPackages.LWP
-        ];
-
-        x11 = with pkgs ; [
-          freetype
-          fontconfig
+          opencv
           xlibs.xproto
           xlibs.libX11
           xlibs.libXt
@@ -45,9 +44,7 @@
           xlibs.kbproto
           xlibs.libXrandr
           xlibs.randrproto
-        ];
-
-        cross = with pkgs; [
+          patchelf
           i386_toolchain.gcc
           i386_toolchain.binutils
           i386_toolchain.gdb
@@ -56,20 +53,13 @@
           arm_toolchain.gdb
         ];
 
-        in pkgs.myEnvFun {
-          name = "dev";
-
-          buildInputs = with pkgs.stdenv.lib; common
-            ++ optionals enableX11 x11
-            ++ optionals enableCross cross;
-
-          # myEnv sets this variables to unreal values to prevent wget
-          # from installing anything. I often need cabal to install this or that
-          # from within devenv, so let's help wget
-          extraCmds = ''
-            unset http_proxy
-            unset https_proxy
-          '';
+        # myEnv sets this variables to unreal values to prevent wget
+        # from installing anything. I often need cabal to install this or that
+        # from within devenv, so let's help wget
+        extraCmds = ''
+          unset http_proxy
+          unset https_proxy
+        '';
       };
     };
   };

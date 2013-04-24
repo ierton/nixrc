@@ -3,7 +3,7 @@
 
 { config, pkgs, ... }:
 
-{
+rec {
   require = [
       /etc/nixos/hardware-configuration.nix
       ./inc/devenv.nix
@@ -264,7 +264,10 @@
 
     # Custom stuff
     haskell_7_6
-    devenv
+    (devenv {
+      enableCross = true;
+      enableX11 = services.xserver.enable;
+    })
     freetype_subpixel
 
   ];
