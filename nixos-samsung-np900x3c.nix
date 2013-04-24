@@ -67,7 +67,7 @@
   ];
 
   swapDevices = [
-    { device = "/dev/disk/by-label/SWAP"; }
+    # { device = "/dev/disk/by-label/SWAP"; }
   ];
 
   powerManagement = {
